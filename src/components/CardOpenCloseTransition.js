@@ -1,7 +1,9 @@
 import React from "react";
 import innerHeight from "ios-inner-height";
 
-export const ANIMATION_TIME_MS = 500;
+export const CARD_FADE_TIME_MS = 100;
+export const CARD_EXPAND_CLOSE_TIME_MS = 300;
+export const ANIMATION_TIME_MS = CARD_FADE_TIME_MS + CARD_EXPAND_CLOSE_TIME_MS;
 
 const startStyles = {
   transformOrigin: "top left",
@@ -14,10 +16,10 @@ const startStyles = {
 };
 
 // yoinked from material design's timing fns
-const timing = "cubic-bezier(0.4, 0.0, 0.2, 1)";
+export const timing = "cubic-bezier(0.4, 0.0, 0.2, 1)";
 
 const activeStyles = {
-  transition: `all ${ANIMATION_TIME_MS}ms ${timing}`
+  transition: `all ${CARD_EXPAND_CLOSE_TIME_MS}ms ${timing}`
   // border: "0px grey solid"
 };
 
@@ -87,9 +89,15 @@ class CardOpenCloseTransition extends React.Component {
   }
 
   onEntering() {
+    // this.setState({
+    //   styles: {
+    //     visibility: "hidden"
+    //   }
+    // });
     this.setState({
       styles: {
         transform: this.getContentToCardSizeTransform(),
+        visibility: "hidden",
         ...startStyles
       },
       innerStyles: {
@@ -97,7 +105,7 @@ class CardOpenCloseTransition extends React.Component {
       }
     });
 
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       this.setState({
         styles: {
           transform: `translate3d(0px, 0px, 0px) scale3d(1, 1, 1)`,
@@ -106,10 +114,10 @@ class CardOpenCloseTransition extends React.Component {
         },
         innerStyles: {
           opacity: 1,
-          transition: `all ${ANIMATION_TIME_MS}ms ${timing}`
+          transition: `all ${CARD_EXPAND_CLOSE_TIME_MS}ms ${timing}`
         }
       });
-    });
+    }, CARD_FADE_TIME_MS);
   }
 
   onExiting() {
@@ -123,19 +131,31 @@ class CardOpenCloseTransition extends React.Component {
       }
     });
 
+    const endStyles = {
+      transform: this.getContentToCardSizeTransform(),
+      ...activeStyles,
+      ...startStyles
+    };
+
     requestAnimationFrame(() => {
       this.setState({
-        styles: {
-          transform: this.getContentToCardSizeTransform(),
-          ...activeStyles,
-          ...startStyles
-        },
+        styles: endStyles,
         innerStyles: {
           opacity: 0,
-          transition: `all ${ANIMATION_TIME_MS}ms ${timing}`
+          transition: `all ${CARD_EXPAND_CLOSE_TIME_MS}ms ${timing}`
         }
       });
     });
+
+    setTimeout(() => {
+      this.setState({
+        styles: {
+          ...endStyles,
+          visibility: "hidden",
+          display: "none"
+        }
+      });
+    }, CARD_EXPAND_CLOSE_TIME_MS);
   }
 
   onEntered() {
