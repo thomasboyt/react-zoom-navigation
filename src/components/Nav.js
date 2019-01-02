@@ -4,7 +4,7 @@ import { Location } from "@reach/router";
 const Nav = () => {
   const backLink = (
     <Location>
-      {({ location }) => {
+      {({ location, navigate }) => {
         if (location.state && location.state.fromCard) {
           return (
             <button
@@ -16,6 +16,19 @@ const Nav = () => {
             </button>
           );
         }
+
+        if (location.pathname !== "/") {
+          return (
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              style={{ position: "absolute", left: "20px", top: "10px" }}
+            >
+              Close
+            </button>
+          );
+        }
+
         return null;
       }}
     </Location>
