@@ -1,4 +1,5 @@
 import React from "react";
+import innerHeight from "ios-inner-height";
 
 export const ANIMATION_TIME_MS = 500;
 
@@ -77,7 +78,7 @@ class CardOpenCloseTransition extends React.Component {
 
     const scale = {
       x: card.offsetWidth / window.innerWidth,
-      y: card.offsetHeight / window.innerHeight
+      y: card.offsetHeight / innerHeight()
     };
 
     const translateRule = `translate3d(${translate.x}px, ${translate.y}px, 0)`;
