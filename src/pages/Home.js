@@ -10,7 +10,7 @@ const Home = () => (
   <div className="page-container">
     <Nav />
 
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: "20px 3px" }}>
       <h2>Welcome back!</h2>
 
       <div className="cards-container">
@@ -27,7 +27,7 @@ const Home = () => (
         <Card
           path="long2"
           label="View long detail 2"
-          renderPage={() => <div>Hello world</div>}
+          renderPage={() => <DetailLong />}
         />
       </div>
     </div>

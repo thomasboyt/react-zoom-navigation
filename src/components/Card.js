@@ -11,14 +11,25 @@ import {
   decelerationFn
 } from "./timing";
 
-const CardLink = ({ to, label }) => (
+import { ReactComponent as Icon } from "../icons/fullscreen.svg";
+
+const CardLink = ({ to, icon, label }) => (
   <Link to={to} state={{ fromCard: true, card: to }}>
-    {label}
+    <div
+      style={{
+        height: "195px",
+        position: "relative",
+        paddingTop: "25px",
+        paddingLeft: "15px"
+      }}
+    >
+      <Icon style={{ width: "35px", marginLeft: "10px" }} />
+      <div style={{ position: "absolute", bottom: "40px" }}>{label}</div>
+    </div>
   </Link>
 );
 
-const CardContent = ({ render, style }) => <div style={style}>{render()}</div>;
-const CardPage = ({ render, style }) => <div style={style}>{render()}</div>;
+const CardRoute = ({ render, style }) => <div style={style}>{render()}</div>;
 
 const baseExpandedStyles = {
   margin: "0px",
@@ -286,32 +297,31 @@ class Card extends React.Component {
     return (
       <React.Fragment>
         <div className="card" style={this.state.style} ref={this.ref}>
-          <div style={{ position: "relative" }}>
-            <TransitionRouter
-              for={this.props.path}
-              onCardPageEnter={this.handleCardPageEnter}
-              onCardPageEntered={this.handleCardPageEntered}
-              onCardPageExit={this.handleCardPageExit}
-              onCardPageExited={this.handleCardPageExited}
-            >
-              <CardContent
-                path="/"
-                render={() => (
-                  <CardLink
-                    path="/"
-                    to={this.props.path}
-                    label={this.props.label}
-                  />
-                )}
-                style={this.state.contentStyle}
-              />
-              <CardPage
-                path={this.props.path}
-                render={this.props.renderPage}
-                style={this.state.pageStyle}
-              />
-            </TransitionRouter>
-          </div>
+          <TransitionRouter
+            for={this.props.path}
+            onCardPageEnter={this.handleCardPageEnter}
+            onCardPageEntered={this.handleCardPageEntered}
+            onCardPageExit={this.handleCardPageExit}
+            onCardPageExited={this.handleCardPageExited}
+          >
+            <CardRoute
+              path="/"
+              render={() => (
+                <CardLink
+                  path="/"
+                  icon={require("../icons/fullscreen.svg")}
+                  to={this.props.path}
+                  label={this.props.label}
+                />
+              )}
+              style={this.state.contentStyle}
+            />
+            <CardRoute
+              path={this.props.path}
+              render={this.props.renderPage}
+              style={this.state.pageStyle}
+            />
+          </TransitionRouter>
         </div>
         {this.renderPlaceholder()}
       </React.Fragment>

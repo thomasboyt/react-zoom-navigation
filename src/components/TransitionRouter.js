@@ -15,7 +15,6 @@ class TransitionRouter extends React.Component {
   componentDidMount() {
     if (this.testLocation(window.location)) {
       // ensure card is opened if page is initially with an open card
-      // TODO: should this logic live in <Card /> ?
       this.props.onCardPageEntered();
     }
   }
@@ -38,6 +37,7 @@ class TransitionRouter extends React.Component {
       this.props.onCardPageEntered();
     }
   }
+
   handleExit(location) {
     if (this.testLocation(location)) {
       this.setState({ isActiveRouter: true });

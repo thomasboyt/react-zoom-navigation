@@ -44,7 +44,7 @@ nav {
   margin: 5px;
   flex: 0 0 auto;
 
-  min-height: 150px;
+  height: 195px;
   display: block;
   border: 1px grey solid;
   background: white;

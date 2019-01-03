@@ -24,7 +24,7 @@ const Nav = () => {
               onClick={() => navigate("/")}
               style={{ position: "absolute", left: "20px", top: "10px" }}
             >
-              Close
+              Home
             </button>
           );
         }
