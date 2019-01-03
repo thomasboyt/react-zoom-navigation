@@ -1,35 +1,10 @@
 import React from "react";
+
+import Nav from "../components/Nav";
 import Card from "../components/Card";
-import TransitionRouter from "../components/TransitionRouter";
 
 import DetailLong from "./DetailLong";
-import { Link } from "@reach/router";
-import Nav from "../components/Nav";
 import DetailShort from "./DetailShort";
-
-const CardLink = ({ to, label }) => (
-  <Link to={to} state={{ fromCard: true, card: to }}>
-    {label}
-  </Link>
-);
-
-const ShortDetailCard = () => (
-  <Card>
-    <TransitionRouter for="short">
-      <CardLink path="/" to="short" label="View short detail" />
-      <DetailShort path="short" />
-    </TransitionRouter>
-  </Card>
-);
-
-const LongDetailCard = () => (
-  <Card>
-    <TransitionRouter for="long">
-      <CardLink path="/" to="long" label="View long detail" />
-      <DetailLong path="long" />
-    </TransitionRouter>
-  </Card>
-);
 
 const Home = () => (
   <div className="page-container">
@@ -38,8 +13,16 @@ const Home = () => (
       <h2>Welcome back!</h2>
 
       <div className="cards-container">
-        <ShortDetailCard />
-        <LongDetailCard />
+        <Card
+          path="short"
+          label="View short detail"
+          renderPage={() => <DetailShort path="short" />}
+        />
+        <Card
+          path="long"
+          label="View long detail"
+          renderPage={() => <DetailLong path="long" />}
+        />
       </div>
     </div>
   </div>

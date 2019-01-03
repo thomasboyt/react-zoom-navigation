@@ -1,44 +1,26 @@
 import React from "react";
 import innerHeight from "ios-inner-height";
 
-export const CARD_FADE_TIME_MS = 100;
-export const CARD_EXPAND_CLOSE_TIME_MS = 300;
-export const ANIMATION_TIME_MS = CARD_FADE_TIME_MS + CARD_EXPAND_CLOSE_TIME_MS;
+import {
+  timingFn,
+  ANIMATION_TIME_MS,
+  ELEMENTS_FADE_IN_MS,
+  ELEMENTS_FADE_OUT_MS
+} from "./timing";
 
 const startStyles = {
   transformOrigin: "top left",
   zIndex: 100,
   position: "absolute",
-  top: "40px",
   left: 0,
-  background: "white",
   maxHeight: "100vh"
 };
 
-// yoinked from material design's timing fns
-export const timing = "cubic-bezier(0.4, 0.0, 0.2, 1)";
-
 const activeStyles = {
-  transition: `all ${CARD_EXPAND_CLOSE_TIME_MS}ms ${timing}`
-  // border: "0px grey solid"
+  transition: `all ${ANIMATION_TIME_MS}ms ${timingFn}`
 };
 
-/**
- * 1. Route with {fromCard: '.cardName'} state is clicked.
- * 2. New route enters with "entering" state. <CardOpenTransition /> diffs this
- *    state on each update, and in this case, when it sees it go to "entering,"
- *    it gets the current location of the card by looking up the selector and
- *    measuring the card's position and size, storing it locally.
- * 3. <CardOpenTransition /> sets itself to be `position: absolute` and places
- *    itself at the measured dimensions. It then scales down for sizing to match
- *    the card size - this is VERY up in the air; I think this may need to do a
- *    scale() transform that is calculated by comparing size of viewport and
- *    size of card? Can also use translate() to place it instead of position
- *    absolute if doing this.
- *  4. The animation of <CardOpenTransition /> scales from this set position and
- *     scale to the correct transform - translate(0, 0) scale(1, 1).
- */
-class CardOpenCloseTransition extends React.Component {
+class CardPageTransition extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -62,38 +44,27 @@ class CardOpenCloseTransition extends React.Component {
     }
   }
 
-  getContentToCardSizeTransform() {
+  getCard() {
     // XXX: this relies on dom structure, so, careful updating the hierarchy...
     // would be nice if this had a query selector coupled with it but can't
     // really do parent query selectors easily w/o jquery or something afaik
-    const card = this.ref.current.parentElement;
+    const card = this.ref.current.parentElement.parentElement;
+    return card;
+  }
 
-    const cardRect = card.getBoundingClientRect();
-
-    const content = this.ref.current;
-    const contentRect = content.getBoundingClientRect();
-
-    const translate = {
-      x: cardRect.x - contentRect.x,
-      y: cardRect.y - contentRect.y
-    };
+  getContentToCardSizeTransform() {
+    const card = this.getCard();
 
     const scale = {
       x: card.offsetWidth / window.innerWidth,
       y: card.offsetHeight / innerHeight()
     };
 
-    const translateRule = `translate3d(${translate.x}px, ${translate.y}px, 0)`;
     const scaleRule = `scale3d(${scale.x}, ${scale.y}, 1)`;
-    return `${translateRule} ${scaleRule}`;
+    return `${scaleRule}`;
   }
 
   onEntering() {
-    // this.setState({
-    //   styles: {
-    //     visibility: "hidden"
-    //   }
-    // });
     this.setState({
       styles: {
         transform: this.getContentToCardSizeTransform(),
@@ -105,7 +76,7 @@ class CardOpenCloseTransition extends React.Component {
       }
     });
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       this.setState({
         styles: {
           transform: `translate3d(0px, 0px, 0px) scale3d(1, 1, 1)`,
@@ -114,10 +85,10 @@ class CardOpenCloseTransition extends React.Component {
         },
         innerStyles: {
           opacity: 1,
-          transition: `all ${CARD_EXPAND_CLOSE_TIME_MS}ms ${timing}`
+          transition: `all ${ELEMENTS_FADE_IN_MS}ms ease-out ${ELEMENTS_FADE_OUT_MS}ms`
         }
       });
-    }, CARD_FADE_TIME_MS);
+    });
   }
 
   onExiting() {
@@ -142,20 +113,10 @@ class CardOpenCloseTransition extends React.Component {
         styles: endStyles,
         innerStyles: {
           opacity: 0,
-          transition: `all ${CARD_EXPAND_CLOSE_TIME_MS}ms ${timing}`
+          transition: `all ${ELEMENTS_FADE_OUT_MS}ms ease-in`
         }
       });
     });
-
-    setTimeout(() => {
-      this.setState({
-        styles: {
-          ...endStyles,
-          visibility: "hidden",
-          display: "none"
-        }
-      });
-    }, CARD_EXPAND_CLOSE_TIME_MS);
   }
 
   onEntered() {
@@ -173,4 +134,4 @@ class CardOpenCloseTransition extends React.Component {
   }
 }
 
-export default CardOpenCloseTransition;
+export default CardPageTransition;
