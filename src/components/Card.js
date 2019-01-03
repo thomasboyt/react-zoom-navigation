@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "@reach/router";
-import innerHeight from "ios-inner-height";
 import TransitionRouter from "./TransitionRouter";
 
 import {
@@ -12,8 +11,6 @@ import {
   decelerationFn
 } from "./timing";
 
-const transition = `all ${ANIMATION_TIME_MS}ms ${timingFn}`;
-
 const CardLink = ({ to, label }) => (
   <Link to={to} state={{ fromCard: true, card: to }}>
     {label}
@@ -24,58 +21,52 @@ const CardContent = ({ render, style }) => <div style={style}>{render()}</div>;
 const CardPage = ({ render, style }) => <div style={style}>{render()}</div>;
 
 const baseExpandedStyles = {
+  margin: "0px",
   position: "absolute",
   zIndex: 100,
   background: "white",
   overflow: "hidden",
-  borderWidth: "0px"
-};
-
-const enteredStyles = {
-  top: "40px",
+  transformOrigin: "top left",
+  top: "0px",
   left: "0px",
-  height: "calc(100% - 40px)",
+  height: "100%",
   width: "100%",
   WebkitOverflowScrolling: "touch"
 };
 
-function getClosedCardSizing(el) {
-  const rect = el.getBoundingClientRect();
+const enteredStyles = {
+  borderColor: "white"
+};
 
-  const style = {
-    left: `${rect.x}px`,
-    top: `${rect.y}px`,
-    width: `${el.offsetWidth}px`,
-    height: `${el.offsetHeight}px`
-  };
+const borderTransition = `border-color ${ANIMATION_TIME_MS}ms ${timingFn}`;
+const transformTransition = `transform ${ANIMATION_TIME_MS}ms ${timingFn}`;
 
-  return style;
-}
-
-function getScaledRule(naturalSize, targetSize) {
+function getScale(naturalSize, targetSize) {
   const scale = {
     x: targetSize.x / naturalSize.x,
     y: targetSize.y / naturalSize.y
   };
 
-  const scaleRule = `scale3d(${scale.x}, ${scale.y}, 1)`;
-  return `${scaleRule}`;
+  return scale;
 }
+
+const initialState = {
+  showPlaceholder: false,
+  style: {
+    overflow: "hidden"
+  },
+  pageStyle: {
+    position: "absolute",
+    opacity: 0
+  },
+  contentStyle: {}
+};
 
 class Card extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      showPlaceholder: false,
-      style: {
-        overflow: "hidden"
-      },
-      pageStyle: {
-        position: "absolute",
-        opacity: 0
-      }
-    };
+    this.state = initialState;
 
     this.ref = React.createRef();
     this.placeholderRef = React.createRef();
@@ -87,12 +78,21 @@ class Card extends React.Component {
      */
 
     const card = this.ref.current;
+    const scale = getScale(
+      { x: window.innerWidth, y: window.innerHeight },
+      { x: card.offsetWidth, y: card.offsetHeight }
+    );
+    const { x, y } = card.getBoundingClientRect();
+    const transform = `translate3d(${x}px, ${y}px, 0) scale3d(${scale.x}, ${
+      scale.y
+    }, 1)`;
+    console.log(transform);
 
     this.setState({
       showPlaceholder: true,
       style: {
         ...baseExpandedStyles,
-        ...getClosedCardSizing(card)
+        transform
       }
     });
 
@@ -101,7 +101,8 @@ class Card extends React.Component {
         style: {
           ...baseExpandedStyles,
           ...enteredStyles,
-          transition
+          transform: "translate3d(0px, 40px, 0px) scale3d(1, 1, 1)",
+          transition: `${transformTransition}, ${borderTransition}`
         }
       });
     });
@@ -111,7 +112,9 @@ class Card extends React.Component {
      */
     this.setState({
       contentStyle: {
-        opacity: 1
+        opacity: 1,
+        transformOrigin: "top left",
+        transform: `scale3d(${1 / scale.x}, ${1 / scale.y}, 1)`
       }
     });
 
@@ -119,7 +122,9 @@ class Card extends React.Component {
       this.setState({
         contentStyle: {
           opacity: 0,
-          transition: `opacity ${ELEMENTS_FADE_OUT_MS}ms ${accelerationFn}`
+          transformOrigin: "top left",
+          transform: `scale3d(1, 1, 1)`,
+          transition: `${transformTransition}, opacity ${ELEMENTS_FADE_OUT_MS}ms ${accelerationFn}`
         }
       });
     });
@@ -130,12 +135,7 @@ class Card extends React.Component {
 
     const basePageStyle = {
       position: "absolute",
-      transformOrigin: "top left",
-      opacity: 0,
-      transform: getScaledRule(
-        { x: window.innerWidth, y: innerHeight() },
-        { x: card.offsetWidth, y: card.offsetHeight }
-      )
+      opacity: 0
     };
 
     this.setState({
@@ -147,9 +147,7 @@ class Card extends React.Component {
         pageStyle: {
           ...basePageStyle,
           opacity: 1,
-          transform: `scale3d(1, 1, 1)`,
-          transition: `transform ${ANIMATION_TIME_MS}ms ${timingFn}, opacity ${ELEMENTS_FADE_IN_MS}ms ${decelerationFn} ${ELEMENTS_FADE_OUT_MS}ms`
-          // transition: `transform ${ANIMATION_TIME_MS}ms ${timingFn}`
+          transition: `opacity ${ELEMENTS_FADE_IN_MS}ms ${decelerationFn} ${ELEMENTS_FADE_OUT_MS}ms`
         }
       });
     });
@@ -162,7 +160,9 @@ class Card extends React.Component {
       style: {
         ...baseExpandedStyles,
         ...enteredStyles,
-        overflow: "auto"
+        overflow: "auto",
+        top: "40px",
+        height: "calc(100% - 40px)"
       },
       pageStyle: {
         opacity: 1
@@ -175,11 +175,21 @@ class Card extends React.Component {
      * Scale card back down
      */
     const card = this.placeholderRef.current;
+    const scale = getScale(
+      { x: window.innerWidth, y: window.innerHeight },
+      { x: card.offsetWidth, y: card.offsetHeight }
+    );
+    const { x, y } = card.getBoundingClientRect();
+    const transform = `translate3d(${x}px, ${y}px, 0) scale3d(${scale.x}, ${
+      scale.y
+    }, 1)`;
 
     this.setState({
+      showPlaceholder: true,
       style: {
         ...baseExpandedStyles,
-        ...enteredStyles
+        ...enteredStyles,
+        transform: "translate3d(0px, 40px, 0px) scale3d(1, 1, 1)"
       }
     });
 
@@ -187,8 +197,8 @@ class Card extends React.Component {
       this.setState({
         style: {
           ...baseExpandedStyles,
-          ...getClosedCardSizing(card),
-          transition
+          transform,
+          transition: `${transformTransition}, ${borderTransition}`
         }
       });
     });
@@ -199,27 +209,19 @@ class Card extends React.Component {
 
     const basePageStyle = {
       position: "absolute",
-      transformOrigin: "top left",
-      opacity: 1,
-      transform: `scale3d(1, 1, 1)`
+      opacity: 1
     };
 
     this.setState({
       pageStyle: basePageStyle
     });
 
-    const transform = getScaledRule(
-      { x: window.innerWidth, y: innerHeight() },
-      { x: card.offsetWidth, y: card.offsetHeight }
-    );
-
     requestAnimationFrame(() => {
       this.setState({
         pageStyle: {
           ...basePageStyle,
           opacity: 0,
-          transform,
-          transition: `transform ${ANIMATION_TIME_MS}ms ${timingFn}, opacity ${ELEMENTS_FADE_OUT_MS}ms ease-in`
+          transition: `opacity ${ELEMENTS_FADE_OUT_MS}ms ${accelerationFn}`
         }
       });
     });
@@ -234,7 +236,9 @@ class Card extends React.Component {
         // for this, but it appears to break the opacity transition for reasons
         // I don't understand, so this works out since it's invisible anyways
         position: "absolute",
-        opacity: 0
+        opacity: 0,
+        transformOrigin: "top left",
+        transform: `scale3d(1, 1, 1)`
       }
     });
 
@@ -242,6 +246,8 @@ class Card extends React.Component {
       this.setState({
         contentStyle: {
           opacity: 0,
+          transformOrigin: "top left",
+          transform: `scale3d(${1 / scale.x}, ${1 / scale.y}, 1)`,
           transition: `opacity ${ELEMENTS_FADE_IN_MS}ms ease-in`
         }
       });
@@ -250,6 +256,8 @@ class Card extends React.Component {
         this.setState({
           contentStyle: {
             opacity: 1,
+            transformOrigin: "top left",
+            transform: `scale3d(${1 / scale.x}, ${1 / scale.y}, 1)`,
             transition: `opacity ${ELEMENTS_FADE_IN_MS}ms ease-in`
           }
         });
@@ -258,10 +266,7 @@ class Card extends React.Component {
   };
 
   handleCardPageExited = () => {
-    this.setState({
-      style: { overflow: "hidden" },
-      showPlaceholder: false
-    });
+    this.setState(initialState);
   };
 
   renderPlaceholder() {
@@ -271,7 +276,7 @@ class Card extends React.Component {
     };
 
     return (
-      <div className="card home-card" style={style} ref={this.placeholderRef}>
+      <div className="card" style={style} ref={this.placeholderRef}>
         {this.props.label}
       </div>
     );
@@ -280,7 +285,7 @@ class Card extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <div className="card home-card" style={this.state.style} ref={this.ref}>
+        <div className="card" style={this.state.style} ref={this.ref}>
           <div style={{ position: "relative" }}>
             <TransitionRouter
               for={this.props.path}

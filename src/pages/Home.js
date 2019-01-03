@@ -9,6 +9,7 @@ import DetailShort from "./DetailShort";
 const Home = () => (
   <div className="page-container">
     <Nav />
+
     <div style={{ padding: "20px" }}>
       <h2>Welcome back!</h2>
 
@@ -22,6 +23,11 @@ const Home = () => (
           path="long"
           label="View long detail"
           renderPage={() => <DetailLong />}
+        />
+        <Card
+          path="long2"
+          label="View long detail 2"
+          renderPage={() => <div>Hello world</div>}
         />
       </div>
     </div>

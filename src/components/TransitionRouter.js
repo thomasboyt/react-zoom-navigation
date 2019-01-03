@@ -21,7 +21,7 @@ class TransitionRouter extends React.Component {
   }
 
   testLocation = location => {
-    const matches = location.pathname.startsWith("/" + this.props.for);
+    const matches = location.pathname === "/" + this.props.for;
     return matches;
   };
 

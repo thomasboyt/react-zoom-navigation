@@ -1,5 +1,5 @@
-export const ELEMENTS_FADE_IN_MS = 300;
-export const ELEMENTS_FADE_OUT_MS = 100;
+export const ELEMENTS_FADE_IN_MS = 375 * 1;
+export const ELEMENTS_FADE_OUT_MS = 125 * 1;
 export const ANIMATION_TIME_MS = ELEMENTS_FADE_IN_MS + ELEMENTS_FADE_OUT_MS;
 
 // yoinked from material design's timing fns
