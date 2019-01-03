@@ -47,7 +47,7 @@ nav {
   flex: 0 0 50%;
   min-height: 150px;
   display: block;
-  border: 1px grey solid;
+  /* border: 1px grey solid; */
   background: white;
 }
 

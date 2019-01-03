@@ -2,9 +2,6 @@ import React from "react";
 import { Location, Router } from "@reach/router";
 import { TransitionGroup, Transition } from "react-transition-group";
 
-import CardPageTransition from "./CardPageTransition";
-import CardLabelTransition from "./CardLabelTransition";
-
 import { ANIMATION_TIME_MS } from "./timing";
 
 class TransitionRouter extends React.Component {
@@ -69,31 +66,11 @@ class TransitionRouter extends React.Component {
               onExited={() => this.handleExited(location)}
             >
               {state => {
-                // console.log(state);
                 const inner = (
                   <Router location={location}>{this.props.children}</Router>
                 );
 
-                if (this.testLocation(location)) {
-                  // card detail page
-                  return (
-                    <CardPageTransition
-                      state={state}
-                      onStateChange={this.handleStateChange}
-                    >
-                      {inner}
-                    </CardPageTransition>
-                  );
-                } else {
-                  // base card
-                  return (
-                    <CardLabelTransition
-                      state={this.state.isActiveRouter ? state : "initial"}
-                    >
-                      {inner}
-                    </CardLabelTransition>
-                  );
-                }
+                return inner;
               }}
             </Transition>
           </TransitionGroup>

@@ -1,8 +1,16 @@
 import React from "react";
 import { Link } from "@reach/router";
+import innerHeight from "ios-inner-height";
 import TransitionRouter from "./TransitionRouter";
 
-import { ANIMATION_TIME_MS, timingFn } from "./timing";
+import {
+  ANIMATION_TIME_MS,
+  timingFn,
+  ELEMENTS_FADE_OUT_MS,
+  ELEMENTS_FADE_IN_MS,
+  accelerationFn,
+  decelerationFn
+} from "./timing";
 
 const transition = `all ${ANIMATION_TIME_MS}ms ${timingFn}`;
 
@@ -11,6 +19,9 @@ const CardLink = ({ to, label }) => (
     {label}
   </Link>
 );
+
+const CardContent = ({ render, style }) => <div style={style}>{render()}</div>;
+const CardPage = ({ render, style }) => <div style={style}>{render()}</div>;
 
 const baseExpandedStyles = {
   position: "absolute",
@@ -23,8 +34,9 @@ const baseExpandedStyles = {
 const enteredStyles = {
   top: "40px",
   left: "0px",
-  height: "100vh",
-  width: "100vw"
+  height: "calc(100% - 40px)",
+  width: "100%",
+  WebkitOverflowScrolling: "touch"
 };
 
 function getClosedCardSizing(el) {
@@ -40,6 +52,16 @@ function getClosedCardSizing(el) {
   return style;
 }
 
+function getScaledRule(naturalSize, targetSize) {
+  const scale = {
+    x: targetSize.x / naturalSize.x,
+    y: targetSize.y / naturalSize.y
+  };
+
+  const scaleRule = `scale3d(${scale.x}, ${scale.y}, 1)`;
+  return `${scaleRule}`;
+}
+
 class Card extends React.Component {
   constructor(props) {
     super(props);
@@ -48,6 +70,10 @@ class Card extends React.Component {
       showPlaceholder: false,
       style: {
         overflow: "hidden"
+      },
+      pageStyle: {
+        position: "absolute",
+        opacity: 0
       }
     };
 
@@ -55,12 +81,10 @@ class Card extends React.Component {
     this.placeholderRef = React.createRef();
   }
 
-  handleExpand = isAppear => {
-    if (isAppear) {
-      // initial page render, skip transition
-      this.handleExpanded();
-      return;
-    }
+  handleCardPageEnter = () => {
+    /*
+     * Expand card sizing
+     */
 
     const card = this.ref.current;
 
@@ -81,9 +105,57 @@ class Card extends React.Component {
         }
       });
     });
+
+    /*
+     * Fade out card content
+     */
+    this.setState({
+      contentStyle: {
+        opacity: 1
+      }
+    });
+
+    requestAnimationFrame(() => {
+      this.setState({
+        contentStyle: {
+          opacity: 0,
+          transition: `opacity ${ELEMENTS_FADE_OUT_MS}ms ${accelerationFn}`
+        }
+      });
+    });
+
+    /*
+     * Fade in page
+     */
+
+    const basePageStyle = {
+      position: "absolute",
+      transformOrigin: "top left",
+      opacity: 0,
+      transform: getScaledRule(
+        { x: window.innerWidth, y: innerHeight() },
+        { x: card.offsetWidth, y: card.offsetHeight }
+      )
+    };
+
+    this.setState({
+      pageStyle: basePageStyle
+    });
+
+    requestAnimationFrame(() => {
+      this.setState({
+        pageStyle: {
+          ...basePageStyle,
+          opacity: 1,
+          transform: `scale3d(1, 1, 1)`,
+          transition: `transform ${ANIMATION_TIME_MS}ms ${timingFn}, opacity ${ELEMENTS_FADE_IN_MS}ms ${decelerationFn} ${ELEMENTS_FADE_OUT_MS}ms`
+          // transition: `transform ${ANIMATION_TIME_MS}ms ${timingFn}`
+        }
+      });
+    });
   };
 
-  handleExpanded = () => {
+  handleCardPageEntered = () => {
     // used for page where you open to already expanded card
     this.setState({
       showPlaceholder: true,
@@ -91,11 +163,17 @@ class Card extends React.Component {
         ...baseExpandedStyles,
         ...enteredStyles,
         overflow: "auto"
+      },
+      pageStyle: {
+        opacity: 1
       }
     });
   };
 
-  handleClose = () => {
+  handleCardPageExit = () => {
+    /*
+     * Scale card back down
+     */
     const card = this.placeholderRef.current;
 
     this.setState({
@@ -114,9 +192,72 @@ class Card extends React.Component {
         }
       });
     });
+
+    /*
+     * Fade out page content
+     */
+
+    const basePageStyle = {
+      position: "absolute",
+      transformOrigin: "top left",
+      opacity: 1,
+      transform: `scale3d(1, 1, 1)`
+    };
+
+    this.setState({
+      pageStyle: basePageStyle
+    });
+
+    const transform = getScaledRule(
+      { x: window.innerWidth, y: innerHeight() },
+      { x: card.offsetWidth, y: card.offsetHeight }
+    );
+
+    requestAnimationFrame(() => {
+      this.setState({
+        pageStyle: {
+          ...basePageStyle,
+          opacity: 0,
+          transform,
+          transition: `transform ${ANIMATION_TIME_MS}ms ${timingFn}, opacity ${ELEMENTS_FADE_OUT_MS}ms ease-in`
+        }
+      });
+    });
+
+    /*
+     * Fade in card content
+     */
+    this.setState({
+      contentStyle: {
+        // set to prevent the incoming content from pushing down the page down
+        // before it starts fading in. you'd think you could use display: none
+        // for this, but it appears to break the opacity transition for reasons
+        // I don't understand, so this works out since it's invisible anyways
+        position: "absolute",
+        opacity: 0
+      }
+    });
+
+    setTimeout(() => {
+      this.setState({
+        contentStyle: {
+          opacity: 0,
+          transition: `opacity ${ELEMENTS_FADE_IN_MS}ms ease-in`
+        }
+      });
+
+      requestAnimationFrame(() => {
+        this.setState({
+          contentStyle: {
+            opacity: 1,
+            transition: `opacity ${ELEMENTS_FADE_IN_MS}ms ease-in`
+          }
+        });
+      });
+    }, ELEMENTS_FADE_OUT_MS);
   };
 
-  handleClosed = () => {
+  handleCardPageExited = () => {
     this.setState({
       style: { overflow: "hidden" },
       showPlaceholder: false
@@ -143,17 +284,27 @@ class Card extends React.Component {
           <div style={{ position: "relative" }}>
             <TransitionRouter
               for={this.props.path}
-              onCardPageEnter={this.handleExpand}
-              onCardPageEntered={this.handleExpanded}
-              onCardPageExit={this.handleClose}
-              onCardPageExited={this.handleClosed}
+              onCardPageEnter={this.handleCardPageEnter}
+              onCardPageEntered={this.handleCardPageEntered}
+              onCardPageExit={this.handleCardPageExit}
+              onCardPageExited={this.handleCardPageExited}
             >
-              <CardLink
+              <CardContent
                 path="/"
-                to={this.props.path}
-                label={this.props.label}
+                render={() => (
+                  <CardLink
+                    path="/"
+                    to={this.props.path}
+                    label={this.props.label}
+                  />
+                )}
+                style={this.state.contentStyle}
               />
-              {this.props.renderPage()}
+              <CardPage
+                path={this.props.path}
+                render={this.props.renderPage}
+                style={this.state.pageStyle}
+              />
             </TransitionRouter>
           </div>
         </div>

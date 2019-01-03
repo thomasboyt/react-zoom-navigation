@@ -16,12 +16,12 @@ const Home = () => (
         <Card
           path="short"
           label="View short detail"
-          renderPage={() => <DetailShort path="short" />}
+          renderPage={() => <DetailShort />}
         />
         <Card
           path="long"
           label="View long detail"
-          renderPage={() => <DetailLong path="long" />}
+          renderPage={() => <DetailLong />}
         />
       </div>
     </div>
